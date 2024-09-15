@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
-  ArrowRight,
-  Users,
-  Trophy,
-  BarChart,
-  Menu,
-  X,
-  User,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Menu, X, Users, Filter, Globe, User } from "lucide-react";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import { LoaderFunction } from "@remix-run/node";
 import { auth } from "~/auth.server";
@@ -27,9 +28,45 @@ export let loader: LoaderFunction = async ({ request }) => {
   return await auth.isAuthenticated(request, {});
 };
 
-export default function HomePage() {
+export default function QueuePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const user = useLoaderData<typeof loader>();
+
+  const queues = [
+    {
+      id: 1,
+      name: "Champion 6mans",
+      region: "EU",
+      players: 4,
+      maxPlayers: 6,
+      estimatedWait: "2 min",
+    },
+    {
+      id: 2,
+      name: "Diamond 6mans",
+      region: "NA",
+      players: 2,
+      maxPlayers: 6,
+      estimatedWait: "5 min",
+    },
+    {
+      id: 3,
+      name: "Grand Champion 6mans",
+      region: "EU",
+      players: 5,
+      maxPlayers: 6,
+      estimatedWait: "1 min",
+    },
+    {
+      id: 4,
+      name: "Platinum 6mans",
+      region: "OCE",
+      players: 1,
+      maxPlayers: 6,
+      estimatedWait: "10 min",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-700 text-white">
       {/* Navigation */}
@@ -114,10 +151,10 @@ export default function HomePage() {
             <a href="/queue" className="block py-2 hover:text-orange-500">
               Queue
             </a>
-            <a href="/scrims" className="block py-2 hover:text-orange-500">
+            <a href="scrims" className="block py-2 hover:text-orange-500">
               Scrims
             </a>
-            <a href="/leagues" className="block py-2 hover:text-orange-500">
+            <a href="leagues" className="block py-2 hover:text-orange-500">
               Leagues
             </a>
 
@@ -160,134 +197,109 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Hero Section */}
-      <header className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-5xl font-bold mb-4">
-          Rocket League 6mans & Scrims
-        </h1>
-        <p className="text-xl mb-8">
-          Queue up, find matches, and improve your game across Discord servers!
-        </p>
-        {user ? (
-          <p></p>
-        ) : (
-          <Form action="/auth/discord" method="post">
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-              Sign in with Discord <ArrowRight className="ml-2" />
+      {/* Queue Page Content */}
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8">Available Queues</h1>
+
+        {/* Filters */}
+        <Card className="mb-8 bg-blue-800">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="rank-filter">Rank</Label>
+                <Select>
+                  <SelectTrigger id="rank-filter">
+                    <SelectValue placeholder="Select Rank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="platinum">Platinum</SelectItem>
+                    <SelectItem value="diamond">Diamond</SelectItem>
+                    <SelectItem value="champion">Champion</SelectItem>
+                    <SelectItem value="grand-champion">
+                      Grand Champion
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="region-filter">Region</Label>
+                <Select>
+                  <SelectTrigger id="region-filter">
+                    <SelectValue placeholder="Select Region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="eu">Europe</SelectItem>
+                    <SelectItem value="na">North America</SelectItem>
+                    <SelectItem value="oce">Oceania</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="queue-type">Queue Type</Label>
+                <Select>
+                  <SelectTrigger id="queue-type">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solo">Solo Queue</SelectItem>
+                    <SelectItem value="team">Team Queue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Queue List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {queues.map((queue) => (
+            <Card key={queue.id} className="bg-blue-800">
+              <CardHeader>
+                <CardTitle>{queue.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center">
+                    <Globe className="mr-2" />
+                    <span>{queue.region}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="mr-2" />
+                    <span>
+                      {queue.players}/{queue.maxPlayers}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Est. Wait: {queue.estimatedWait}</span>
+                  <Button className="bg-green-500 hover:bg-green-600">
+                    Join Queue
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Cross-Server Queue Information */}
+        <Card className="mt-8 bg-blue-800">
+          <CardHeader>
+            <CardTitle>Cross-Server Queueing</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">
+              You can now queue for 6mans across different Discord servers! This
+              means more players and faster queue times.
+            </p>
+            <Button className="bg-purple-500 hover:bg-purple-600">
+              <Globe className="mr-2" /> Enable Cross-Server Queueing
             </Button>
-          </Form>
-        )}
-      </header>
-
-      {/* How It Works */}
-      <section className="bg-blue-800 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 text-center">How It Works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="p-6 bg-blue-700">
-              <h3 className="text-xl font-semibold mb-4">
-                1. Connect Your Account
-              </h3>
-              <p>
-                Link your Discord and Rocket League accounts to get started.
-              </p>
-            </Card>
-            <Card className="p-6 bg-blue-700">
-              <h3 className="text-xl font-semibold mb-4">2. Join a Queue</h3>
-              <p>Choose from various 6mans queues or find a scrim match.</p>
-            </Card>
-            <Card className="p-6 bg-blue-700">
-              <h3 className="text-xl font-semibold mb-4">
-                3. Play and Improve
-              </h3>
-              <p>Compete in matches, track your stats, and climb the ranks!</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Features */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 text-center">Key Features</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center">
-              <Users size={48} className="mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                Cross-Server Queuing
-              </h3>
-              <p className="text-center">
-                Queue up with players from different Discord servers.
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <Trophy size={48} className="mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                Rank-Based Matchmaking
-              </h3>
-              <p className="text-center">
-                Get matched with players of similar skill levels.
-              </p>
-            </div>
-            <div className="flex flex-col items-center">
-              <BarChart size={48} className="mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Detailed Stats</h3>
-              <p className="text-center">
-                Track your performance and progress over time.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="bg-blue-800 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 text-center">
-            What Players Are Saying
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-6 bg-blue-700">
-              <p className="mb-4">
-                "This platform has revolutionized how I practice and improve in
-                Rocket League!"
-              </p>
-              <p className="font-semibold">- xXRocketMasterXx</p>
-            </Card>
-            <Card className="p-6 bg-blue-700">
-              <p className="mb-4">
-                "Finding scrims has never been easier. Highly recommended for
-                competitive teams!"
-              </p>
-              <p className="font-semibold">- AerialQueen</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Community Stats */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-8">Our Growing Community</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <p className="text-4xl font-bold mb-2">10,000+</p>
-              <p>Active Players</p>
-            </div>
-            <div>
-              <p className="text-4xl font-bold mb-2">50,000+</p>
-              <p>Matches Played</p>
-            </div>
-            <div>
-              <p className="text-4xl font-bold mb-2">500+</p>
-              <p>Discord Servers</p>
-            </div>
-          </div>
-        </div>
-      </section>
+          </CardContent>
+        </Card>
+      </main>
 
       {/* Footer */}
-      <footer className="bg-blue-900 py-8">
+      <footer className="bg-blue-900 py-8 mt-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap justify-between">
             <div className="w-full md:w-1/3 mb-4 md:mb-0">
