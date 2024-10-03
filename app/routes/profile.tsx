@@ -46,16 +46,22 @@ import {
 } from "~/components/ui/table";
 
 export let loader: LoaderFunction = async ({ request }) => {
-  return await auth.isAuthenticated(request, {});
+  let user = await auth.isAuthenticated(request, {});
+  let stats = null;
+  if (user) {
+    const res = await fetch("https://api.aylanibot.app/api/users/show?id=1", {
+      headers: {
+        Authorization: `Bearer ${user.accessToken}`,
+      },
+    });
+    stats = await res.json();
+  }
+  return { user, stats };
 };
-
 export default function ProfilePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const user = useLoaderData<typeof loader>();
+  const { user, stats } = useLoaderData<typeof loader>();
 
-  const player = {
-    streak: 3,
-  };
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-700 text-white">
       {/* Navigation */}
@@ -247,19 +253,19 @@ export default function ProfilePage() {
                   <TableBody>
                     <TableRow>
                       <TableCell>Total Matches</TableCell>
-                      <TableCell>237</TableCell>
+                      <TableCell>{stats.total_games}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Wins</TableCell>
-                      <TableCell>154</TableCell>
+                      <TableCell>{stats.wins}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Losses</TableCell>
-                      <TableCell>83</TableCell>
+                      <TableCell>{stats.losses}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Win Rate</TableCell>
-                      <TableCell>65%</TableCell>
+                      <TableCell>{(stats.wins / 1) * 100}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Goals</TableCell>
@@ -297,31 +303,36 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-lg font-semibold">Win Rate</p>
-                <Progress value={65} className="mt-2" />
-                <p className="text-right mt-1">65%</p>
+                <Progress
+                  value={(stats.wins / stats.total_games) * 100}
+                  className="mt-2"
+                />
+                <p className="text-right mt-1">
+                  {(stats.wins / stats.total_games) * 100}%
+                </p>
               </div>
               <div>
                 <p className="text-lg font-semibold">Matches Played</p>
-                <p className="text-3xl font-bold mt-2">237</p>
+                <p className="text-3xl font-bold mt-2">{stats.total_games}</p>
               </div>
               <div>
                 <p className="text-lg font-semibold">Current Streak</p>
                 <div
                   className={`flex items-center ${
-                    player.streak > 0
+                    stats.streak > 0
                       ? "text-3xl text-orange-500"
                       : "text-3xl text-blue-500"
                   }`}
                 >
-                  {player.streak > 0 ? (
+                  {stats.streak > 0 ? (
                     <>
                       <Flame className="w-8 h-8 mr-1" />
-                      <span>{player.streak}</span>
+                      <span>{stats.streak}</span>
                     </>
                   ) : (
                     <>
                       <Snowflake className="w-8 h-8 mr-1" />
-                      <span>{Math.abs(player.streak)}</span>
+                      <span>{Math.abs(stats.streak)}</span>
                     </>
                   )}
                 </div>

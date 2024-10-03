@@ -72,6 +72,7 @@ const discordStrategy = new DiscordStrategy(
      * Construct the user profile to your liking by adding data you fetched etc.
      * and only returning the data that you actually need for your application.
      */
+    console.log(accessToken, profile);
     return {
       id: profile.id,
       displayName: profile.displayName,
